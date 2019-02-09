@@ -12,6 +12,7 @@ int randomCountdown = 0;
 
 void setup() {
   randomSeed(analogRead(0));
+  Serial.begin(9600);
 
   initButtons();
   initLeds();
@@ -78,9 +79,14 @@ bool isButtonPressed(int button){
 }
 
 void initButtons(){
-  pinMode(buttonNext, INPUT);
-  pinMode(buttonPrev, INPUT);
-  pinMode(buttonRandom, INPUT);
+  initButton(buttonNext);
+  initButton(buttonPrev);
+  initButton(buttonRandom);
+}
+
+void initButton(int button){
+  pinMode(button, INPUT);
+  digitalWrite(button, HIGH);
 }
 
 void initLeds(){
