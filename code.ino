@@ -1,8 +1,8 @@
 int ledCount = 9;
 int selected;
 int i;
-int buttonPrev = 12;
 int buttonNext = 11;
+int buttonPrev = 12;
 int buttonRandom = 10;
 int noButton = 0;
 int clickDelay = 300;
@@ -12,7 +12,6 @@ int randomCountdown = 0;
 
 void setup() {
   randomSeed(analogRead(0));
-  Serial.begin(9600);
 
   initButtons();
   initLeds();
@@ -86,12 +85,13 @@ void initButtons(){
 
 void initButton(int button){
   pinMode(button, INPUT);
-  digitalWrite(button, HIGH);
+  digitalWrite(button, LOW);
 }
 
 void initLeds(){
   for (i = 1; i <= ledCount; i++)
     pinMode(i, OUTPUT);
+    digitalWrite(i, LOW);
 }
 
 int getRandom(){
@@ -102,7 +102,7 @@ int getRandom(){
 void moveNext(){
   int newValue = selected + 1;
   if(newValue > ledCount)
-    newValue = ledCount;
+    newValue = 1;
   move(newValue);
   moveDelay();
 }
@@ -110,7 +110,7 @@ void moveNext(){
 void movePrev(){
   int newValue = selected - 1;
   if(newValue < 1)
-    newValue = 1;
+    newValue = ledCount;
   move(newValue);
   moveDelay();
 }
