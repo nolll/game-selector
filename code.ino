@@ -6,20 +6,40 @@ int buttonNext = 11;
 int buttonRandom = 10;
 int noButton = 0;
 int clickDelay = 300;
+int randomizeStepCount = 5;
+int randomDelay = 200;
+int randomCountdown = 0;
 
 void setup() {
+  randomSeed(analogRead(0));
+
   initButtons();
   initLeds();
-  
-  randomSeed(analogRead(0));
-  move(getRandom());
+  moveRandom();
 }
 
 void loop() {
+  if(isRandomizing()){
+    continueRandomize();
+  }
   int pressedButton = getPressedButton();
   if(pressedButton != noButton){
     handleButtonPress(pressedButton);
   }
+}
+
+bool isRandomizing(){
+  return randomCountdown > 0;
+}
+
+void startRandomize(){
+  randomCountdown = randomizeStepCount;
+  moveRandom();
+}
+
+void continueRandomize(){
+  randomCountdown -= 1;
+  moveRandom();
 }
 
 int getPressedButton(){
@@ -34,11 +54,11 @@ int getPressedButton(){
 
 void handleButtonPress(int pressedButton){
   if (pressedButton == buttonNext)
-    move(selected + 1);
+    moveNext();
   else if (pressedButton == buttonPrev)
-    move(selected - 1);
+    movePrev();
   else if (pressedButton == buttonRandom)
-    move(getRandom());
+    startRandomize();
 }
 
 bool isNextPressed(){
@@ -73,16 +93,38 @@ int getRandom(){
   return rnd != selected ? rnd : getRandom();
 }
 
-void move(int newValue){
-  if(newValue < 1)
-    newValue = 1;
+void moveNext(){
+  int newValue = selected + 1;
   if(newValue > ledCount)
     newValue = ledCount;
-  if(newValue != selected){
-    int oldValue = selected;
-    digitalWrite(oldValue, LOW);
-    digitalWrite(newValue, HIGH);
-    selected = newValue;
-    delay(clickDelay);
-  }
+  move(newValue);
+  moveDelay();
+}
+
+void movePrev(){
+  int newValue = selected - 1;
+  if(newValue < 1)
+    newValue = 1;
+  move(newValue);
+  moveDelay();
+}
+
+void moveRandom(){
+  move(getRandom());
+  randomizeDelay();
+}
+
+void move(int newValue){
+  int oldValue = selected;
+  digitalWrite(oldValue, LOW);
+  digitalWrite(newValue, HIGH);
+  selected = newValue;
+}
+
+void moveDelay(){
+  delay(clickDelay);
+}
+
+void randomizeDelay(){
+  delay(randomDelay);
 }
