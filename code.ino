@@ -69,7 +69,7 @@ void initLeds(){
 }
 
 int getRandom(){
-  return random(1, ledCount + 1);
+  return random(1, ledCount);
 }
 
 void move(int newValue){
