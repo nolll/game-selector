@@ -4,6 +4,7 @@ int i;
 int buttonPrev = 12;
 int buttonNext = 11;
 int buttonRandom = 10;
+int noButton = 0;
 int clickDelay = 300;
 
 void setup() {
@@ -15,12 +16,45 @@ void setup() {
 }
 
 void loop() {
-  if (isNextPressed())
+  int pressedButton = getPressedButton();
+  if(pressedButton != noButton){
+    handleButtonPress(pressedButton);
+  }
+}
+
+int getPressedButton(){
+  if(isNextPressed())
+    return buttonNext;
+  if(isPrevPressed())
+    return buttonPrev;
+  if(isRandomPressed())
+    return buttonRandom;
+  return noButton;
+}
+
+void handleButtonPress(int pressedButton){
+  if (pressedButton == buttonNext)
     move(selected + 1);
-  else if (isPrevPressed())
+  else if (pressedButton == buttonPrev)
     move(selected - 1);
-  else if (isRandomPressed())
+  else if (pressedButton == buttonRandom)
     move(getRandom());
+}
+
+bool isNextPressed(){
+  return isButtonPressed(buttonNext);
+}
+
+bool isPrevPressed(){
+  return isButtonPressed(buttonPrev);
+}
+
+bool isRandomPressed(){
+  return isButtonPressed(buttonRandom);
+}
+
+bool isButtonPressed(int button){
+  return digitalRead(button) == HIGH;
 }
 
 void initButtons(){
@@ -32,18 +66,6 @@ void initButtons(){
 void initLeds(){
   for (i = 1; i <= ledCount; i++)
     pinMode(i, OUTPUT);
-}
-
-bool isNextPressed(){
-  return digitalRead(buttonNext) == HIGH;
-}
-
-bool isPrevPressed(){
-  return digitalRead(buttonPrev) == HIGH;
-}
-
-bool isRandomPressed(){
-  return digitalRead(buttonRandom) == HIGH;
 }
 
 int getRandom(){
