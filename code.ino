@@ -1,19 +1,25 @@
-int ledCount = 9;
-int selected;
-int i;
-int buttonNext = 11;
-int buttonPrev = 12;
-int buttonRandom = 10;
-int noButton = 0;
-int clickDelay = 300;
-int randomizeStepCount = 5;
-int randomDelay = 200;
+const int ledCount = 9;
+const int inputCount = 3;
+const int buttonNext = 11;
+const int buttonPrev = 12;
+const int buttonRandom = 10;
+
+const int randomDelay = 200;
+const long debounceDelay = 50;
+
+int selectedLed = 0;
 int randomCountdown = 0;
+int randomizeStepCount = 5;
+int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom};
+int inputState[inputCount];
+int lastInputState[inputCount];
+bool buttonState[inputCount];
+long lastDebounceTime[inputCount];
 
 void setup() {
   randomSeed(analogRead(0));
 
-  initButtons();
+  initInputs();
   initLeds();
   moveRandom();
 }
@@ -21,10 +27,28 @@ void setup() {
 void loop() {
   if(isRandomizing()){
     continueRandomize();
+  } else {
+    readInputs();
+    handleButtonPress();
   }
-  int pressedButton = getPressedButton();
-  if(pressedButton != noButton){
-    handleButtonPress(pressedButton);
+}
+
+void readInputs(){
+  int i;
+  for(i = 0; i < inputCount; i++){
+    int reading = digitalRead(inputPins[i]);
+    if(reading != lastInputState[i]){
+      lastDebounceTime[i] = millis();
+    }
+    if((millis() - lastDebounceTime[i]) > debounceDelay){
+      if(reading != inputState[i]){
+        inputState[i] = reading;
+        if(inputState[i] == HIGH){
+          buttonState[i] = true;
+        }
+      }
+    }
+    lastInputState[i] = reading;
   }
 }
 
@@ -42,53 +66,44 @@ void continueRandomize(){
   moveRandom();
 }
 
-int getPressedButton(){
-  if(isNextPressed())
-    return buttonNext;
-  if(isPrevPressed())
-    return buttonPrev;
-  if(isRandomPressed())
-    return buttonRandom;
-  return noButton;
+void handleButtonPress(){
+  int i;
+  for(i = 0; i < inputCount; i++){
+    if(buttonState[i]){
+      performButtonAction(i);
+      buttonState[i] = false;
+    }
+  }
 }
 
-void handleButtonPress(int pressedButton){
-  if (pressedButton == buttonNext)
+void performButtonAction(int i){
+  int button = inputPins[i];
+  if (button == buttonNext)
     moveNext();
-  else if (pressedButton == buttonPrev)
+  else if (button == buttonPrev)
     movePrev();
-  else if (pressedButton == buttonRandom)
+  else if (button == buttonRandom)
     startRandomize();
 }
 
-bool isNextPressed(){
-  return isButtonPressed(buttonNext);
+void initInputs(){
+  int i;
+  for (i = 0; i < inputCount; i++){
+    initInput(i);
+  }
 }
 
-bool isPrevPressed(){
-  return isButtonPressed(buttonPrev);
-}
-
-bool isRandomPressed(){
-  return isButtonPressed(buttonRandom);
-}
-
-bool isButtonPressed(int button){
-  return digitalRead(button) == HIGH;
-}
-
-void initButtons(){
-  initButton(buttonNext);
-  initButton(buttonPrev);
-  initButton(buttonRandom);
-}
-
-void initButton(int button){
-  pinMode(button, INPUT);
-  digitalWrite(button, LOW);
+void initInput(int i){
+  int input = inputPins[i];
+  pinMode(input, INPUT);
+  digitalWrite(input, LOW);
+  lastInputState[i] = LOW;
+  buttonState[i] = false;
+  lastDebounceTime[i] = 0;
 }
 
 void initLeds(){
+  int i;
   for (i = 1; i <= ledCount; i++)
     pinMode(i, OUTPUT);
     digitalWrite(i, LOW);
@@ -96,23 +111,21 @@ void initLeds(){
 
 int getRandom(){
   int rnd = random(1, ledCount);
-  return rnd != selected ? rnd : getRandom();
+  return rnd != selectedLed ? rnd : getRandom();
 }
 
 void moveNext(){
-  int newValue = selected + 1;
-  if(newValue > ledCount)
-    newValue = 1;
-  move(newValue);
-  moveDelay();
+  int newLed = selectedLed + 1;
+  if(newLed > ledCount)
+    newLed = 1;
+  move(newLed);
 }
 
 void movePrev(){
-  int newValue = selected - 1;
-  if(newValue < 1)
-    newValue = ledCount;
-  move(newValue);
-  moveDelay();
+  int newLed = selectedLed - 1;
+  if(newLed < 1)
+    newLed = ledCount;
+  move(newLed);
 }
 
 void moveRandom(){
@@ -120,15 +133,11 @@ void moveRandom(){
   randomizeDelay();
 }
 
-void move(int newValue){
-  int oldValue = selected;
-  digitalWrite(oldValue, LOW);
-  digitalWrite(newValue, HIGH);
-  selected = newValue;
-}
-
-void moveDelay(){
-  delay(clickDelay);
+void move(int newLed){
+  int oldLed = selectedLed;
+  digitalWrite(oldLed, LOW);
+  digitalWrite(newLed, HIGH);
+  selectedLed = newLed;
 }
 
 void randomizeDelay(){
