@@ -1,8 +1,8 @@
 const int ledCount = 9;
 const int inputCount = 3;
-const int buttonNext = 11;
-const int buttonPrev = 12;
-const int buttonRandom = 10;
+const int buttonNext = 3;
+const int buttonPrev = 4;
+const int buttonRandom = 2;
 
 const int randomDelay = 200;
 const long debounceDelay = 50;
@@ -10,6 +10,7 @@ const long debounceDelay = 50;
 int selectedLed = 0;
 int randomCountdown = 0;
 int randomizeStepCount = 5;
+int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom};
 int inputState[inputCount];
 int lastInputState[inputCount];
@@ -104,26 +105,28 @@ void initInput(int i){
 
 void initLeds(){
   int i;
-  for (i = 1; i <= ledCount; i++)
-    pinMode(i, OUTPUT);
-    digitalWrite(i, LOW);
+  int led;
+  for (i = 0; i < ledCount; i++)
+    led = ledPins[i];
+    pinMode(led, OUTPUT);
+    digitalWrite(led, LOW);
 }
 
 int getRandom(){
-  int rnd = random(1, ledCount);
+  int rnd = random(0, ledCount - 1);
   return rnd != selectedLed ? rnd : getRandom();
 }
 
 void moveNext(){
   int newLed = selectedLed + 1;
-  if(newLed > ledCount)
+  if(newLed >= ledCount)
     newLed = 1;
   move(newLed);
 }
 
 void movePrev(){
   int newLed = selectedLed - 1;
-  if(newLed < 1)
+  if(newLed < 0)
     newLed = ledCount;
   move(newLed);
 }
@@ -135,8 +138,8 @@ void moveRandom(){
 
 void move(int newLed){
   int oldLed = selectedLed;
-  digitalWrite(oldLed, LOW);
-  digitalWrite(newLed, HIGH);
+  digitalWrite(ledPins[oldLed], LOW);
+  digitalWrite(ledPins[newLed], HIGH);
   selectedLed = newLed;
 }
 
