@@ -105,11 +105,9 @@ void initInput(int i){
 
 void initLeds(){
   int i;
-  int led;
   for (i = 0; i < ledCount; i++)
-    led = ledPins[i];
-    pinMode(led, OUTPUT);
-    digitalWrite(led, LOW);
+    pinMode(ledPins[i], OUTPUT);
+    digitalWrite(ledPins[i], LOW);
 }
 
 int getRandom(){
