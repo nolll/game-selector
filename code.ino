@@ -3,10 +3,10 @@ const int inputCount = 3;
 const int buttonNext = 3;
 const int buttonPrev = 4;
 const int buttonRandom = 2;
-
 const int randomDelay = 200;
 const long debounceDelay = 50;
-
+const int firstLed = 0;
+int lastLed = ledCount - 1;
 int selectedLed = 0;
 int randomCountdown = 0;
 int randomizeStepCount = 5;
@@ -111,21 +111,21 @@ void initLeds(){
 }
 
 int getRandom(){
-  int rnd = random(0, ledCount - 1);
+  int rnd = random(firstLed, lastLed);
   return rnd != selectedLed ? rnd : getRandom();
 }
 
 void moveNext(){
   int newLed = selectedLed + 1;
-  if(newLed >= ledCount)
-    newLed = 1;
+  if(newLed > lastLed)
+    newLed = firstLed;
   move(newLed);
 }
 
 void movePrev(){
   int newLed = selectedLed - 1;
-  if(newLed < 0)
-    newLed = ledCount;
+  if(newLed < firstLed)
+    newLed = lastLed;
   move(newLed);
 }
 
