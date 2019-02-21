@@ -9,13 +9,12 @@ const int firstLed = 0;
 int lastLed = ledCount - 1;
 int selectedLed = 0;
 int randomCountdown = 0;
-int randomizeStepCount = 5;
+int randomizeStepCount = 10;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom};
 int inputState[inputCount];
 int lastInputState[inputCount];
 bool buttonState[inputCount];
-long lastDebounceTime[inputCount];
 
 void setup() {
   randomSeed(analogRead(0));
@@ -38,15 +37,10 @@ void readInputs(){
   int i;
   for(i = 0; i < inputCount; i++){
     int reading = digitalRead(inputPins[i]);
-    if(reading != lastInputState[i]){
-      lastDebounceTime[i] = millis();
-    }
-    if((millis() - lastDebounceTime[i]) > debounceDelay){
-      if(reading != inputState[i]){
-        inputState[i] = reading;
-        if(inputState[i] == HIGH){
-          buttonState[i] = true;
-        }
+    if(reading != inputState[i]){
+      inputState[i] = reading;
+      if(inputState[i] == HIGH){
+        buttonState[i] = true;
       }
     }
     lastInputState[i] = reading;
@@ -100,7 +94,6 @@ void initInput(int i){
   digitalWrite(input, LOW);
   lastInputState[i] = LOW;
   buttonState[i] = false;
-  lastDebounceTime[i] = 0;
 }
 
 void initLeds(){
