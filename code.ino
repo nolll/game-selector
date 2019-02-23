@@ -1,17 +1,20 @@
 const int ledCount = 9;
-const int inputCount = 3;
+const int inputCount = 6;
 const int buttonNext = 3;
 const int buttonPrev = 4;
 const int buttonRandom = 2;
+const int remoteButtonNext = 14;
+const int remoteButtonPrev = 15;
+const int remoteButtonRandom = 16;
 const int randomDelay = 200;
 const long debounceDelay = 50;
 const int firstLed = 0;
 int lastLed = ledCount - 1;
 int selectedLed = 0;
 int randomCountdown = 0;
-int randomizeStepCount = 5;
+int randomizeStepCount = 10;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
-int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom};
+int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
 int inputState[inputCount];
 int lastInputState[inputCount];
 bool buttonState[inputCount];
@@ -79,12 +82,24 @@ void handleButtonPress(){
 
 void performButtonAction(int i){
   int button = inputPins[i];
-  if (button == buttonNext)
+  if (isNextButton(button))
     moveNext();
-  else if (button == buttonPrev)
+  else if (isPrevButton(button))
     movePrev();
-  else if (button == buttonRandom)
+  else if (isRandomButton(button))
     startRandomize();
+}
+
+int isNextButton(int button){
+  return button == buttonNext || button == remoteButtonNext;
+}
+
+int isPrevButton(int button){
+  return button == buttonPrev || button == remoteButtonPrev;
+}
+
+int isRandomButton(int button){
+  return button == buttonRandom || button == remoteButtonRandom;
 }
 
 void initInputs(){
