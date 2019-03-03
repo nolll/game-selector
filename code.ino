@@ -6,6 +6,7 @@ const int buttonRandom = 2;
 const int remoteButtonNext = 14;
 const int remoteButtonPrev = 15;
 const int remoteButtonRandom = 16;
+const int buzzer = 1;
 const int randomDelay = 200;
 const long debounceDelay = 50;
 const int firstLed = 0;
@@ -14,6 +15,7 @@ int selectedLed = 0;
 int randomCountdown = 0;
 int randomizeStepCount = 10;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
+int notes[ledCount - 1] = {33, 65, 131, 262, 523, 1047, 2093, 4186};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
 int inputState[inputCount];
 int lastInputState[inputCount];
@@ -25,7 +27,7 @@ void setup() {
 
   initInputs();
   initLeds();
-  moveRandom();
+  move(getRandom());
 }
 
 void loop() {
@@ -68,6 +70,17 @@ void startRandomize(){
 void continueRandomize(){
   randomCountdown -= 1;
   moveRandom();
+  if(randomCountdown == 0){
+    stopSound();
+  }
+}
+
+void makeSound(int i){
+  tone(buzzer, notes[i]);
+}
+
+void stopSound(){
+  noTone(buzzer);
 }
 
 void handleButtonPress(){
@@ -145,7 +158,9 @@ void movePrev(){
 }
 
 void moveRandom(){
-  move(getRandom());
+  int rnd = getRandom();
+  move(rnd);
+  makeSound(rnd);
   randomizeDelay();
 }
 
