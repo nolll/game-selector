@@ -28,7 +28,7 @@ void setup() {
 
   initInputs();
   initLeds();
-  move(getRandom());
+  startSequence();
 }
 
 void loop() {
@@ -38,6 +38,16 @@ void loop() {
     readInputs();
     handleButtonPress();
   }
+}
+
+void startSequence(){
+  int i;
+  for(i = ledCount - 1; i >= 0; i--){
+    delay(500);
+    move(i);
+  }
+  delay(1000);
+  move(getRandom());
 }
 
 void readInputs(){
