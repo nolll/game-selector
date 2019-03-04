@@ -1,8 +1,8 @@
 const int ledCount = 9;
 const int inputCount = 6;
-const int buttonNext = 3;
+const int buttonNext = 2;
 const int buttonPrev = 4;
-const int buttonRandom = 2;
+const int buttonRandom = 3;
 const int remoteButtonNext = 14;
 const int remoteButtonPrev = 15;
 const int remoteButtonRandom = 16;
@@ -13,7 +13,8 @@ const int firstLed = 0;
 int lastLed = ledCount - 1;
 int selectedLed = 0;
 int randomCountdown = 0;
-int randomizeStepCount = 10;
+int randomizeMinStepCount = 7;
+int randomizeMaxStepCount = 15;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
 int notes[ledCount - 1] = {33, 65, 131, 262, 523, 1047, 2093, 4186};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
@@ -63,7 +64,9 @@ bool isRandomizing(){
 }
 
 void startRandomize(){
-  randomCountdown = randomizeStepCount;
+  int countdownSpread = randomizeMaxStepCount - randomizeMinStepCount;
+  int rnd = random(0, countdownSpread);
+  randomCountdown = randomizeMinStepCount + rnd;
   moveRandom();
 }
 
