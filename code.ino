@@ -24,8 +24,6 @@ bool buttonState[inputCount];
 long lastDebounceTime[inputCount];
 
 void setup() {
-  randomSeed(analogRead(0));
-
   initInputs();
   initLeds();
   startSequence();
@@ -47,7 +45,7 @@ void startSequence(){
     move(i);
   }
   delay(1000);
-  move(getRandom());
+  move(getRandom(false));
 }
 
 void readInputs(){
@@ -151,9 +149,10 @@ void initLeds(){
     digitalWrite(ledPins[i], LOW);
 }
 
-int getRandom(){
-  int rnd = random(firstLed, lastLed);
-  return rnd != selectedLed ? rnd : getRandom();
+int getRandom(bool forceNew){
+  int reading = analogRead(A3);
+  int rnd = reading % 8;
+  return forceNew && rnd == selectedLed ? getRandom(forceNew) : rnd;
 }
 
 void moveNext(){
@@ -171,7 +170,7 @@ void movePrev(){
 }
 
 void moveRandom(){
-  int rnd = getRandom();
+  int rnd = getRandom(true);
   move(rnd);
   makeSound(rnd);
   randomizeDelay();
