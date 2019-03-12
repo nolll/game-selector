@@ -6,9 +6,10 @@ const int buttonRandom = 3;
 const int remoteButtonNext = 14;
 const int remoteButtonPrev = 15;
 const int remoteButtonRandom = 16;
-const int buzzer = 1;
+const int buzzer = 17;
 const int randomDelay = 200;
-const long debounceDelay = 50;
+const int debounceDelay = 50;
+const int tonePause = 60;
 const int firstLed = 0;
 int lastLed = ledCount - 1;
 int selectedLed = 0;
@@ -87,7 +88,7 @@ void continueRandomize(){
 }
 
 void makeSound(int i){
-  tone(buzzer, notes[i]);
+  tone(buzzer, notes[i], tonePause);
 }
 
 void stopSound(){
