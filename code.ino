@@ -42,10 +42,10 @@ void loop() {
 void startSequence(){
   int i;
   for(i = ledCount - 1; i >= 0; i--){
-    delay(500);
+    delay(100);
     move(i);
   }
-  delay(1000);
+  delay(500);
   move(getRandom(false));
 }
 
@@ -151,7 +151,7 @@ void initLeds(){
 }
 
 int getRandom(bool forceNew){
-  int reading = analogRead(A3);
+  int reading = analogRead(A4);
   int rnd = reading % 8;
   return forceNew && rnd == selectedLed ? getRandom(forceNew) : rnd;
 }
