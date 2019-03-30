@@ -17,7 +17,7 @@ int randomCountdown = 0;
 int randomizeMinStepCount = 7;
 int randomizeMaxStepCount = 15;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
-int notes[ledCount - 1] = {33, 65, 131, 262, 523, 1047, 2093, 4186};
+int notes[ledCount] = {33, 65, 131, 262, 523, 1047, 2093, 4186, 4186};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
 int inputState[inputCount];
 int lastInputState[inputCount];
@@ -43,10 +43,10 @@ void startSequence(){
   int i;
   for(i = ledCount - 1; i >= 0; i--){
     delay(100);
-    move(i);
+    moveAndMakeSound(i);
   }
   delay(500);
-  move(getRandom(false));
+  moveAndMakeSound(getRandom(false));
 }
 
 void readInputs(){
@@ -160,20 +160,19 @@ void moveNext(){
   int newLed = selectedLed + 1;
   if(newLed > lastLed)
     newLed = firstLed;
-  move(newLed);
+  moveAndMakeSound(newLed);
 }
 
 void movePrev(){
   int newLed = selectedLed - 1;
   if(newLed < firstLed)
     newLed = lastLed;
-  move(newLed);
+  moveAndMakeSound(newLed);
 }
 
 void moveRandom(){
   int rnd = getRandom(true);
-  move(rnd);
-  makeSound(rnd);
+  moveAndMakeSound(rnd);
   randomizeDelay();
 }
 
@@ -182,6 +181,11 @@ void move(int newLed){
   digitalWrite(ledPins[oldLed], LOW);
   digitalWrite(ledPins[newLed], HIGH);
   selectedLed = newLed;
+}
+
+void moveAndMakeSound(int newLed){
+  move(newLed);
+  makeSound(newLed);
 }
 
 void randomizeDelay(){
