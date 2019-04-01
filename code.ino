@@ -17,7 +17,7 @@ int randomCountdown = 0;
 int randomizeMinStepCount = 7;
 int randomizeMaxStepCount = 15;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
-int notes[ledCount] = {33, 65, 131, 262, 523, 1047, 2093, 4186, 4186};
+int notes[ledCount] = {4186, 4186, 2093, 1047, 523, 262, 131, 65, 33};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
 int inputState[inputCount];
 int lastInputState[inputCount];
@@ -42,7 +42,7 @@ void loop() {
 void startSequence(){
   int i;
   for(i = ledCount - 1; i >= 0; i--){
-    delay(100);
+    delay(200);
     moveAndMakeSound(i);
   }
   delay(500);
