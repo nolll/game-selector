@@ -1,3 +1,7 @@
+// IRremote - Version: Latest 
+#include <IRremote.h>
+#include <ir_Lego_PF_BitStreamEncoder.h>
+
 const int ledCount = 9;
 const int inputCount = 6;
 const int buttonNext = 2;
@@ -6,6 +10,7 @@ const int buttonRandom = 3;
 const int remoteButtonNext = 14;
 const int remoteButtonPrev = 15;
 const int remoteButtonRandom = 16;
+const int remoteIR = 19;
 const int buzzer = 17;
 const int randomDelay = 200;
 const int debounceDelay = 50;
@@ -19,14 +24,30 @@ int randomizeMaxStepCount = 15;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
 int notes[ledCount] = {4186, 4186, 2093, 1047, 523, 262, 131, 65, 33};
 int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
+int buttonNextIndex = 0;
+int buttonPrevIndex = 1;
+int buttonRandomIndex = 2;
 int inputState[inputCount];
 int lastInputState[inputCount];
 bool buttonState[inputCount];
 long lastDebounceTime[inputCount];
+#define IR_POWER 0x00FF629D
+#define IR_A 0x00FF22DD
+#define IR_B 0x00FF02FD
+#define IR_C 0x00FFC23D
+#define IR_UP 0x00FF9867
+#define IR_DOWN 0x00FF38C7
+#define IR_LEFT 0x00FF30CF
+#define IR_RIGHT 0x00FF7A85
+#define IR_SELECT 0x00FF18E7
+
+IRrecv irrecv(remoteIR);
+decode_results results;
 
 void setup() {
   initInputs();
   initLeds();
+  initIR();
   startSequence();
 }
 
@@ -51,21 +72,42 @@ void startSequence(){
 
 void readInputs(){
   int i;
-  for(i = 0; i < inputCount; i++){
-    int reading = digitalRead(inputPins[i]);
-    if(reading != lastInputState[i]){
-      lastDebounceTime[i] = millis();
-    }
-    if((millis() - lastDebounceTime[i]) > debounceDelay){
-      if(reading != inputState[i]){
-        inputState[i] = reading;
-        if(inputState[i] == HIGH){
-          buttonState[i] = true;
+  int irReading = readIR();
+  if(irReading != 0) {
+    buttonState[irReading] = true;
+  } else {
+    for(i = 0; i < inputCount; i++){
+      int reading = digitalRead(inputPins[i]);
+      if(reading != lastInputState[i]){
+        lastDebounceTime[i] = millis();
+      }
+      if((millis() - lastDebounceTime[i]) > debounceDelay){
+        if(reading != inputState[i]){
+          inputState[i] = reading;
+          if(inputState[i] == HIGH){
+            buttonState[i] = true;
+          }
         }
       }
+      lastInputState[i] = reading;
     }
-    lastInputState[i] = reading;
   }
+}
+
+int readIR(){
+  int irBtnPressed = 0;
+  if (irrecv.decode(&results))
+  {
+    if (results.value == IR_UP)
+      irBtnPressed = buttonPrevIndex;
+    else if (results.value == IR_DOWN)
+      irBtnPressed = buttonNextIndex;
+    else if (results.value == IR_SELECT)
+      irBtnPressed = buttonRandomIndex;
+  }
+  
+  irrecv.resume();
+  return irBtnPressed;
 }
 
 bool isRandomizing(){
@@ -88,11 +130,11 @@ void continueRandomize(){
 }
 
 void makeSound(int i){
-  tone(buzzer, notes[i], tonePause);
+  //tone(buzzer, notes[i], tonePause);
 }
 
 void stopSound(){
-  noTone(buzzer);
+  //noTone(buzzer);
 }
 
 void handleButtonPress(){
@@ -148,6 +190,11 @@ void initLeds(){
   for (i = 0; i < ledCount; i++)
     pinMode(ledPins[i], OUTPUT);
     digitalWrite(ledPins[i], LOW);
+}
+
+void initIR(){
+  Serial.begin(9600);
+  irrecv.enableIRIn();
 }
 
 int getRandom(bool forceNew){
