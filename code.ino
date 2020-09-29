@@ -32,9 +32,9 @@ int lastInputState[inputCount];
 bool buttonState[inputCount];
 long lastDebounceTime[inputCount];
 
-int IR_DOWN = 0x00FF38C7
-int IR_UP = 0x00FF9867
-int IR_SELECT = 0x00FF18E7
+int IR_DOWN = 0x00FF38C7;
+int IR_UP = 0x00FF9867;
+int IR_SELECT = 0x00FF18E7;
 
 IRrecv irrecv(remoteIR);
 decode_results results;
