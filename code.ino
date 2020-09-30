@@ -3,13 +3,11 @@
 #include <ir_Lego_PF_BitStreamEncoder.h>
 
 const int ledCount = 9;
-const int inputCount = 6;
+const int inputCount = 3;
 const int buttonNext = 2;
 const int buttonPrev = 4;
 const int buttonRandom = 3;
-const int remoteButtonNext = 14;
-const int remoteButtonPrev = 15;
-const int remoteButtonRandom = 16;
+const int randomPin = A4;
 const int remoteIR = A5;
 const int buzzer = 17;
 const int randomDelay = 200;
@@ -23,7 +21,7 @@ int randomizeMinStepCount = 7;
 int randomizeMaxStepCount = 15;
 int ledPins[ledCount] = {5, 6, 7, 8, 9, 10, 11, 12, 13};
 int notes[ledCount] = {4186, 4186, 2093, 1047, 523, 262, 131, 65, 33};
-int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom, remoteButtonNext, remoteButtonPrev, remoteButtonRandom};
+int inputPins[inputCount] = {buttonNext, buttonPrev, buttonRandom};
 int buttonNextIndex = 0;
 int buttonPrevIndex = 1;
 int buttonRandomIndex = 2;
@@ -38,14 +36,16 @@ long lastDebounceTime[inputCount];
 //#define IR_SELECT 0x00FF18E7
 
 // simulator
-#define IR_UP 16601263
-#define IR_DOWN 16584943
-#define IR_SELECT 16617583
+#define IR_UP 0x00FD50AF
+#define IR_DOWN 0x00FD10EF
+#define IR_SELECT 0x00FD906F
 
 IRrecv irrecv(remoteIR);
 decode_results results;
 
 void setup() {
+  Serial.begin(9600);
+  randomSeed(analogRead(randomPin));
   initIR();
   initInputs();
   initLeds();
@@ -53,84 +53,65 @@ void setup() {
 }
 
 void loop() {
-  if(isRandomizing()){
-    continueRandomize();
-  } else {
-    readInputs();
-    handleButtonPress();
-  }
+  readInputs();
+  handleButtonPress();
 }
 
 void startSequence(){
-  int i;
-  for(i = ledCount - 1; i >= 0; i--){
+  for(int i = ledCount - 1; i >= 0; i--){
     delay(200);
     moveAndMakeSound(i);
   }
   delay(500);
-  moveAndMakeSound(getRandom(false));
+  moveAndMakeSound(getRandomLed());
 }
 
 void readInputs(){
-  int i;
-  int irReading = readIR();
-  if(irReading != 0) {
-    buttonState[irReading] = true;
-  } else {
-    for(i = 0; i < inputCount; i++){
-      int reading = digitalRead(inputPins[i]);
-      if(reading != lastInputState[i]){
-        lastDebounceTime[i] = millis();
-      }
-      if((millis() - lastDebounceTime[i]) > debounceDelay){
-        if(reading != inputState[i]){
-          inputState[i] = reading;
-          if(inputState[i] == HIGH){
-            buttonState[i] = true;
-          }
+  bool irRead = tryReadIR();
+  if(!irRead)
+    readButtons();
+}
+
+void readButtons(){
+  for(int i = 0; i < inputCount; i++){
+    int reading = digitalRead(inputPins[i]);
+    if(reading != lastInputState[i]){
+      lastDebounceTime[i] = millis();
+    }
+    if((millis() - lastDebounceTime[i]) > debounceDelay){
+      if(reading != inputState[i]){
+        inputState[i] = reading;
+        if(inputState[i] == HIGH){
+          buttonState[i] = true;
         }
       }
-      lastInputState[i] = reading;
     }
+    lastInputState[i] = reading;
   }
 }
 
-int readIR(){
-  int irBtnPressed = 0;
+bool tryReadIR(){
+  int buttonIndex = -1;
   if (irrecv.decode(&results))
   {
-    if (results.value == IR_UP)
-      irBtnPressed = buttonPrevIndex;
-    else if (results.value == IR_DOWN)
-      irBtnPressed = buttonNextIndex;
-    else if (results.value == IR_SELECT)
-      irBtnPressed = buttonRandomIndex;
-    
-    delay(200);
+    if (results.value == IR_UP){
+      buttonIndex = buttonPrevIndex;
+    }
+    else if (results.value == IR_DOWN){
+      buttonIndex = buttonNextIndex;
+    }
+    else if (results.value == IR_SELECT){
+      buttonIndex = buttonRandomIndex;
+    }
 
     irrecv.resume();
   }
-  
-  return irBtnPressed;
-}
 
-bool isRandomizing(){
-  return randomCountdown > 0;
-}
-
-void startRandomize(){
-  int countdownSpread = randomizeMaxStepCount - randomizeMinStepCount;
-  int rnd = random(0, countdownSpread);
-  randomCountdown = randomizeMinStepCount + rnd;
-  moveRandom();
-}
-
-void continueRandomize(){
-  randomCountdown -= 1;
-  moveRandom();
-  if(randomCountdown == 0){
-    stopSound();
+  if(buttonIndex > -1){
+    buttonState[buttonIndex] = true;
   }
+  
+  return false;
 }
 
 void makeSound(int i){
@@ -142,8 +123,7 @@ void stopSound(){
 }
 
 void handleButtonPress(){
-  int i;
-  for(i = 0; i < inputCount; i++){
+  for(int i = 0; i < inputCount; i++){
     if(buttonState[i]){
       performButtonAction(i);
       buttonState[i] = false;
@@ -158,19 +138,33 @@ void performButtonAction(int i){
   else if (isPrevButton(button))
     movePrev();
   else if (isRandomButton(button))
-    startRandomize();
+    randomize();
+}
+
+void randomize(){
+  int randomCountdown = getNumberOfRandomSteps();
+  while(randomCountdown > 0){
+    moveRandom();
+    randomCountdown -= 1;
+  }
+}
+
+int getNumberOfRandomSteps(){
+  int countdownSpread = randomizeMaxStepCount - randomizeMinStepCount;
+  int rnd = random(0, countdownSpread);
+  return randomizeMinStepCount + rnd;
 }
 
 int isNextButton(int button){
-  return button == buttonNext || button == remoteButtonNext;
+  return button == buttonNext;
 }
 
 int isPrevButton(int button){
-  return button == buttonPrev || button == remoteButtonPrev;
+  return button == buttonPrev;
 }
 
 int isRandomButton(int button){
-  return button == buttonRandom || button == remoteButtonRandom;
+  return button == buttonRandom;
 }
 
 void initInputs(){
@@ -197,14 +191,12 @@ void initLeds(){
 }
 
 void initIR(){
-  Serial.begin(9600);
   irrecv.enableIRIn();
 }
 
-int getRandom(bool forceNew){
-  int reading = analogRead(A4);
-  int rnd = reading % 8;
-  return forceNew && rnd == selectedLed ? getRandom(forceNew) : rnd;
+int getRandomLed(){
+  int randomLed = random(0, ledCount);
+  return randomLed == selectedLed ? getRandomLed() : randomLed;
 }
 
 void moveNext(){
@@ -222,8 +214,8 @@ void movePrev(){
 }
 
 void moveRandom(){
-  int rnd = getRandom(true);
-  moveAndMakeSound(rnd);
+  int randomLed = getRandomLed();
+  moveAndMakeSound(randomLed);
   randomizeDelay();
 }
 
